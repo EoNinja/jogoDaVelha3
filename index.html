@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        * {
+            padding: 0px;
+            margin: 0px;
+        }
+
+        body {
+            color: #ffffff;
+            background-color: #303030;
+            font-family: sans-serif;
+        }
+
+        h1 {
+            margin: 3vh auto;
+            font-size: 5vh;
+            text-align: center;
+        }
+
+        #jogador {
+            margin: 1vh auto 13vh auto;
+        }
+
+        #container {
+            width: 50vh;
+            height: 50vh;
+            display: flex;
+            margin: 0vh auto 6vh auto;
+            flex-wrap: wrap;
+        }
+
+        .elemento {
+            display: flex;
+            border: 0.1vh solid #ffffff;
+            box-sizing: border-box;
+        }
+
+
+        .elemento span {
+            text-align: center;
+            width: 100%;
+            line-height: 80%;
+        }
+        #timeContainer {
+            margin: auto;
+            width: 40vh;
+            height: 0.7vh;
+            border: 0.1vh solid white;
+            margin: 0vh auto 0vh auto;
+        }
+        #time {
+            height: 100%;
+        }
+
+        .linha {
+            background-color: rgba(32, 190, 252, 0.541);
+        }
+
+        p, #timer {
+            font-size: 2.4vh;
+            text-align: center;
+            margin: 1vh;
+        }
+
+        #container3 {
+            border-radius: 1vh;
+            height: 50vh;
+            width: 50vh;
+            margin: 10vh auto;
+            border: 0.2vh solid white;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        #container3 p {
+            margin-top: 3vh;
+            width: 100%;
+        }
+
+        .opctam {
+            text-align: center;
+            border-radius: 0.5vh;
+            margin : 1.5vh;
+            width: 8.5vh;
+            height: 3vh;
+            font-size: 2.7vh;
+        }
+    </style>
+    <title>jogoDaVelha</title>
+</head>
+<body>
+    <h1>Jogo Da Velha</h1>
+    <div id="container2">
+        <p id="jogador"></p>
+        <div id="container"></div>
+        <div id="noTime">
+            <p id="tempo">tempo restante: <span id="timer"></span></p>
+            <div id="timeContainer"><div id="time"></div></div>
+        </div>
+    </div>
+    <div id="container3"></div>
+    <script>
+        var jogo = new Array();
+        var tam;
+        var tamLine;
+        var segundos;
+        var vez;
+        var intervalo;
+        var tempo;
+        var pare;
+
+        escolher();
+
+        function escolher() {
+            document.getElementById('container3').style.display = 'flex';
+            document.getElementById('container2').style.display = 'none';
+            document.getElementById('container3').innerHTML = '<p>Escolha o Tamanho do Jogo</p>'
+            for(let x=2; x<22; x++) {
+                let elemento = document.createElement('div');
+                elemento.setAttribute('onclick', `tamanho(${x})`);
+                elemento.classList.add('opctam');
+                elemento.innerHTML = `${x}x${x}`;
+                elemento.style.border = '0.1vh solid white';
+                document.getElementById('container3').appendChild(elemento);
+            }
+        }
+
+        function tamanho(tamanho) {
+            tam = tamanho;
+            document.getElementById('container3').innerHTML = '<p>Escolha o Tamanho da Linha</p>';
+            for(let x=2; x<=tamanho; x++) {
+                let elemento = document.createElement('div');
+                elemento.setAttribute('onclick', `tamLinha(${x})`);
+                elemento.classList.add('opctam');
+                elemento.innerHTML = x;
+                elemento.style.border = '0.1vh solid white';
+                document.getElementById('container3').appendChild(elemento);
+            }
+        }
+
+        function tamLinha(taml) {
+            tamLine = taml;
+            document.getElementById('container3').innerHTML = '<p>Escolha o Tempo para Pensar</p>';
+            criarTempo(10);
+            criarTempo(15);
+            criarTempo(20);
+            criarTempo(30);
+            criarTempo(45);
+            criarTempo(60);
+            criarTempo(90);
+            criarTempo('#');
+        }
+
+        function criarTempo(p) {
+            let element = document.createElement('div');
+            if(p == '#') {
+                element.setAttribute('onclick', `seg(${undefined})`)
+            }else{
+                element.setAttribute('onclick', `seg(${p})`);
+            }
+            
+            element.classList.add('opctam');
+            element.innerHTML = p;
+            element.style.border = '0.1vh solid white';
+            document.getElementById('container3').appendChild(element);
+        }
+
+        function seg (s) {
+            if(s == undefined) {
+                segundos = undefined;
+            }else{
+                segundos = s*100;
+            }
+            iniciar();
+        }
+
+
+
+        function iniciar() {
+            vez = 0;
+            pare = false;
+            document.getElementById('container2').style.display = 'block';
+            document.getElementById('container3').style.display = 'none';
+            if(segundos > 0) {
+                document.getElementById('noTime').style.display = 'block';
+                
+            }else {
+
+                document.getElementById('noTime').style.display = 'none';
+            }
+            criarELementos(jogo, tam);
+            document.getElementById('jogador').innerHTML = 'Vez do Jogador: <span id="simbolo" style="text-transform: uppercase; font-weight: 900;"></span>';
+            document.getElementById('simbolo').innerHTML = simbolo();
+            tempo = segundos;
+            intervalo = setInterval(rel, '10', segundos);
+        }
+
+
+        function clicar(id) {
+            if((!document.getElementById(id).classList.contains('clicado'))&&(!pare)) {
+                document.getElementById(id).classList.add('clicado');
+                jogo[id] = simbolo();
+                document.getElementById(id).innerHTML = `<span>${simbolo()}</span>`;
+                let linha = verificar(jogo, tam, tamLine);
+                if(linha != undefined) {
+                    pare = true;
+                    clearInterval(intervalo);
+                    for(let x=0; x<linha.length; x++) {
+                        for(let y=0; y<linha[x].length; y++) {
+                            document.getElementById(`${linha[x][y]}`).classList.add('linha');
+                        }
+                    }
+                    document.getElementById('jogador').innerHTML = `Vencedor: <span style="text-transform: uppercase; font-weight: 600;">${simbolo()}</span>`;
+                    setTimeout(iniciar, 6000);
+                }else if((vez+1)==(tam*tam)) {
+                    clearInterval(intervalo);
+                    document.getElementById('simbolo').innerHTML = '';
+                    document.getElementById('jogador').innerHTML = 'O jogo empatou!';
+                    setTimeout(iniciar, 6000);
+                }else{
+                    vez++;
+                    document.getElementById('simbolo').innerHTML = simbolo();
+                    tempo = segundos;
+                    clearInterval(intervalo);
+                    intervalo = setInterval(rel, '10', segundos);
+                }
+            }
+        }
+
+        function rel(seg) {
+                if(tempo>=0) {
+                    let timer = document.getElementById('timer');
+                    if((tempo%100) == 0){
+                        timer.innerHTML = `${tempo/100}s`;
+                    }
+                    document.getElementById('time').style.width = `${(seg-tempo)*1/(seg/100)}%`;
+                    document.getElementById('time').style.backgroundColor = `hsl(${tempo/(seg/120)}, 100%, 50%)`
+                    tempo--;
+                }else if(tempo <0){
+                    document.getElementById('jogador').innerHTML = `Jogador <span style="text-transform: uppercase; font-weight: 600;">${simbolo(true)}</span> venceu por tempo`;
+                    clearInterval(intervalo);
+                    setTimeout(iniciar, 6000);
+                }
+        }
+
+        function simbolo (inverter) {
+            if(inverter)
+                return vez % 2 == 0 ? 'o' : 'x';
+            return vez % 2 == 0 ? 'x' : 'o';
+        }
+        function criarELementos(array, tam) {
+            let container = document.getElementById('container');
+            container.innerHTML = '';
+            for(let x=0; x<tam*tam; x++) {
+                let elemento = document.createElement('div');
+                elemento.setAttribute('id', x);
+                elemento.setAttribute('onclick', `clicar(${x})`);
+                elemento.classList.add('elemento');
+                elemento.style.width = `${1/tam*100}%`;
+                elemento.style.height = `${1/tam*100}%`;
+                elemento.style.fontSize = `${50/tam}vh`;
+                if(x%tam==0) {
+                    elemento.style.borderLeft = 'none';
+                }
+                if(x<tam) {
+                    elemento.style.borderTop = 'none';
+                }
+                if(x>=tam*(tam-1)) {
+                    elemento.style.borderBottom = 'none';
+                }
+                if(x%tam == tam-1) {
+                    elemento.style.borderRight = 'none';
+                }
+                container.appendChild(elemento);
+                array[x] = 0;
+            }
+        }
+
+
+        function verificar (array, dim, lin) {
+            let suportePrincipal = new Array();
+            let suporte = new Array();
+            let cont;
+            let cont2 = 0;
+            for(let x=0; x<dim; x++) {
+                for(let y=0; y<(dim - lin + 1); y++) {
+                    cont = 0;
+                    suporte = array.slice((dim*x + y), (dim*x + y + lin));
+                    for(let z=0; z<lin; z++) {
+                        if((suporte[z] != 0) && (suporte[z] == suporte[0]))
+                            cont++;
+                    }
+                    if ((cont == lin) && (lin > 0)) {
+                        suportePrincipal[cont2] = new Array();
+                        for(let z=0; z<lin; z++) {
+                            suportePrincipal[cont2].push(dim*x + y + z);
+                        }
+                        cont2++;
+                    }
+                }
+            }
+            if ( lin > 1) {
+                for(let x=0; x<dim; x++) {
+                    for(let y=0; y<(dim - lin + 1); y++) {
+                        cont = 0;
+                        suporte = new Array();
+                        for(let z=0; z<lin; z++) {
+                            suporte.push(array[dim*(y+z) + x]);
+                        }
+                        for(let z=0; z<lin; z++) {
+                            if((suporte[z] != 0) && (suporte[z] == suporte[0]))
+                                cont++;
+                        }
+                        if ((cont == lin) && (lin > 0)) {
+                            suportePrincipal[cont2] = new Array();
+                            for(let z=0; z<lin; z++) {
+                                suportePrincipal[cont2].push(dim*(y+z) + x);
+                            }
+                            cont2++;
+                        }
+                    }
+                }
+                for(let x=0; x<(2*dim -1); x++) {
+                    if((x < dim) && ((x+1) >= lin)) {
+                        for(let y=0; y<((x+1) - lin + 1); y++ ) {
+                            cont = 0;
+                            suporte = new Array();
+                            for(let z=0; z<lin; z++) {
+                                suporte.push(array[((dim-(x+1))*dim) + (y+z)*(dim+1)]);
+                            }
+                            for(let z=0; z<lin; z++) {
+                                if((suporte[z] != 0) && (suporte[z] == suporte[0]))
+                                    cont++;
+                            }
+                            if((cont == lin) && (lin>0)) {
+                                suportePrincipal[cont2] = new Array();
+                                for(let z=0; z<lin; z++) {
+                                    suportePrincipal[cont2].push(((dim-(x+1))*dim)+(y+z)*(dim+1));
+                                }
+                                cont2++;
+                            }
+                        }
+                    }else if((x >= dim) && ((2*dim -1 -x) >= lin)) {
+                        for(let y=0; y<((2*dim-1 - x) - lin + 1); y++) {
+                            cont = 0;
+                            suporte = new Array();
+                            for(let z=0; z<lin; z++) {
+                                suporte.push(array[(x-dim + 1) + (y+z)*(dim+1)]);
+                            }
+                            for(let z=0; z<lin; z++) {
+                                if((suporte[z] != 0) && (suporte[z] == suporte[0])) {
+                                    cont++;
+                                }
+                            }
+                            if((cont == lin) && (lin>0)) {
+                                suportePrincipal[cont2] = new Array();
+                                for(let z=0; z<lin; z++) {
+                                    suportePrincipal[cont2].push((x-dim + 1) + (y+z)*(dim+1));
+                                }
+                                cont2++;
+                            }
+                        }
+                    }
+                }
+                for(let x=0; x<(2*dim-1); x++) {
+                    if((x<dim) && ((x+1) >= lin)) {
+                        for(let y=0; y<((x+1)-lin + 1); y++) {
+                            cont = 0;
+                            suporte = new Array();
+                            for(let z=0; z<lin; z++) {
+                                suporte.push(array[(x*dim)-((y+z)*(dim-1))]);
+                            }
+                            for(let z=0; z<lin; z++) {
+                                if((suporte[z] != 0) && (suporte[0] == suporte[z])) {
+                                    cont++;
+                                }
+                            }
+                            if((cont == lin) && (lin>0)) {
+                                suportePrincipal[cont2] = new Array();
+                                for(let z=0; z<lin; z++){
+                                    suportePrincipal[cont2].push((x*dim)-((y+z)*(dim-1)));
+                                }
+                                cont2++;
+                            }
+                        }
+                    }else if((x>=dim) && (((2*dim -1)-x) >= lin)) {
+                        for(let y=0; y<(((2*dim - 1)-x) - lin + 1); y++) {
+                            cont = 0;
+                            suporte = new Array();
+                            for(let z=0; z<lin; z++) {
+                                suporte.push(array[(dim*(dim-1)+((x+1)-dim))-((y+z)*(dim-1))]);
+                            }
+                            for(let z=0; z<lin; z++) {
+                                if((suporte[z] != 0) && (suporte[0] == suporte[z])) {
+                                    cont++;
+                                }
+                            }
+                            if((cont == lin) && (lin > 0)) {
+                                suportePrincipal[cont2] = new Array();
+                                for(let z=0; z<lin; z++) {
+                                    suportePrincipal[cont2].push((dim*(dim-1)+((x+1)-dim))-((y+z)*(dim-1)));
+                                }
+                                cont2++;
+                            }
+                        }
+                    }
+                }
+            }
+            return suportePrincipal.length != 0 ? suportePrincipal : undefined;
+        }
+    </script>
+</body>
+</html>
