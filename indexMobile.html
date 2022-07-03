@@ -121,7 +121,7 @@
             document.getElementById('container3').style.display = 'flex';
             document.getElementById('container2').style.display = 'none';
             document.getElementById('container3').innerHTML = '<p>Escolha o Tamanho do Jogo</p>'
-            for(let x=2; x<22; x++) {
+            for(let x=3; x<23; x++) {
                 let elemento = document.createElement('div');
                 elemento.setAttribute('onclick', `tamanho(${x})`);
                 elemento.classList.add('opctam');
@@ -134,7 +134,7 @@
         function tamanho(tamanho) {
             tam = tamanho;
             document.getElementById('container3').innerHTML = '<p>Escolha o Tamanho da Linha</p>';
-            for(let x=2; x<=tamanho; x++) {
+            for(let x=3; x<=tamanho; x++) {
                 let elemento = document.createElement('div');
                 elemento.setAttribute('onclick', `tamLinha(${x})`);
                 elemento.classList.add('opctam');
